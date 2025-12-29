@@ -185,7 +185,7 @@ int main()
           return 0;
         }
 
-        // 마우스 클릭
+        // [수정된 부분] 마우스 클릭 처리
         if (event.type == sfEvtMouseButtonPressed && !gameover && gs != COMPLETE)
         {
           int c = event.mouseButton.x / TILE_SIZE;
@@ -193,26 +193,49 @@ int main()
 
           if (r >= ROWMIN && r <= ROWMAX && c >= COLMIN && c <= COLMAX)
           {
-            if (event.mouseButton.button == sfMouseLeft)
+
+            // 1. 휠 클릭 (Middle) -> Autodig
+            if (event.mouseButton.button == sfMouseMiddle)
             {
-              if (!gamestart)
-              {
-                gamestart = true;
-                initboard(r, c);
-              }
-
-              // 지뢰를 밟았는지 확인 (밟았다면 좌표 저장)
-              if (board[r][c] == CELL_CLOSED_MINE)
-              {
-                exploded_r = r;
-                exploded_c = c;
-              }
-
-              dig(r, c);
+              autodig(r, c);
             }
+            // 2. 왼쪽 클릭
+            else if (event.mouseButton.button == sfMouseLeft)
+            {
+              // 오른쪽 버튼이 이미 눌려있다면 -> Autodig (좌우 동시 클릭)
+              if (sfMouse_isButtonPressed(sfMouseRight))
+              {
+                autodig(r, c);
+              }
+              else
+              {
+                // 순수 왼쪽 클릭
+                if (!gamestart)
+                {
+                  gamestart = true;
+                  initboard(r, c);
+                }
+                if (board[r][c] == CELL_CLOSED_MINE)
+                {
+                  exploded_r = r;
+                  exploded_c = c;
+                }
+                dig(r, c);
+              }
+            }
+            // 3. 오른쪽 클릭
             else if (event.mouseButton.button == sfMouseRight)
             {
-              flag(r, c);
+              // 왼쪽 버튼이 이미 눌려있다면 -> Autodig (좌우 동시 클릭)
+              if (sfMouse_isButtonPressed(sfMouseLeft))
+              {
+                autodig(r, c);
+              }
+              else
+              {
+                // 순수 오른쪽 클릭 -> 깃발
+                flag(r, c);
+              }
             }
           }
         }
