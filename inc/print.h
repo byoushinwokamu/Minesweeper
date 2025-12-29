@@ -3,5 +3,6 @@
 
 void print();
 void print_gameover();
+void print_complete();
 
 #endif

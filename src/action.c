@@ -2,15 +2,9 @@
 #include <string.h>
 
 #include "action.h"
-#include "macro.h"
 #include "count.h"
-
-extern int board[ROWMAX + 1][COLMAX + 1];
-extern int mines, minesnow;
-extern bool gameover;
-extern char msg[100];
-extern const int dx[8];
-extern const int dy[8];
+#include "global.h"
+#include "conio.h"
 
 void flag(int r, int c)
 {
@@ -72,7 +66,7 @@ void dig(int r, int c)
 void autodig(int r, int c)
 {
   int rr, cc;
-  if ((board[r][c] != CELL_CLOSED_MINE && board[r][c] == !CELL_CLOSED_NOMINE) || countflag(r, c) != countmine(r, c))
+  if ((board[r][c] != countmine(r, c)) || countflag(r, c) != countmine(r, c))
   {
     strcpy(msg, "You can't autodig.");
     return;

@@ -1,10 +1,10 @@
-#include "conio.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
 
-#include "macro.h"
+#include "conio.h"
+#include "global.h"
 #include "count.h"
 #include "action.h"
 #include "print.h"
@@ -15,6 +15,8 @@ char msg[100];
 int rcur, ccur;
 int mines = 0, minesnow = 0;
 bool gameover = false;
+bool restart = false;
+enum game_status gs;
 
 const int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
 const int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
@@ -29,7 +31,7 @@ void initboard(int ri, int ci)
       for (int j = COLMIN; j <= COLMAX; j++)
         board[i][j] = CELL_CLOSED_NOMINE;
 
-    while (mines < 99)
+    while (mines < MINE_AMOUNT)
     {
       int r = rand() % (ROWMAX + 1);
       int c = rand() % (COLMAX + 1);
@@ -45,7 +47,7 @@ void initboard(int ri, int ci)
 int main(int argc, char **argv)
 {
   int ch = 0;
-  while (true)
+  do
   {
     bool gamestart = false;
     rcur = ROWINI, ccur = COLINI;
@@ -53,7 +55,8 @@ int main(int argc, char **argv)
     gameover = false;
     initboard(ROWINI, COLINI);
     print();
-    while ((ch = getch()) != 't')
+
+    while (ch = getch())
     {
       printf("%d\n", ch);
       switch (ch)
@@ -75,30 +78,33 @@ int main(int argc, char **argv)
         break;
       case 'd':
         if (!gamestart)
-        {
           gamestart = true, initboard(rcur, ccur);
-        }
         dig(rcur, ccur);
         break;
       case 'a':
         autodig(rcur, ccur);
+        break;
+      case 't':
+        gs = TERMINATE;
+        break;
       }
+      if (checkcomplete())
+        gs = COMPLETE;
       if (gameover)
+        gs = OVER;
+
+      if (gs != PLAY)
         break;
       print();
     }
-    print_gameover();
-    while ((ch = getch()) != 't')
-    {
-      if (ch == 'r')
-      {
-        gameover = false;
-        break;
-      }
+
+    if (gs == OVER)
       print_gameover();
-    }
-    if (ch == 't')
+    else if (gs == COMPLETE)
+      print_complete();
+
+    if (gs == TERMINATE)
       break;
-  }
+  } while (restart);
   return 0;
 }

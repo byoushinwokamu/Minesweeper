@@ -1,9 +1,5 @@
 #include "count.h"
-#include "macro.h"
-
-extern int board[ROWMAX + 1][COLMAX + 1];
-extern const int dx[8];
-extern const int dy[8];
+#include "global.h"
 
 int countmine(int r, int c)
 {
@@ -33,4 +29,23 @@ int countflag(int r, int c)
       f++;
   }
   return f;
+}
+
+bool checkcomplete()
+{
+  int flagok = 0;
+  int flagno = 0;
+  for (int i = ROWMIN; i <= ROWMAX; i++)
+    for (int j = COLMIN; j <= COLMAX; j++)
+      switch (board[i][j])
+      {
+      case CELL_FLAG_MINE:
+        flagok++;
+        break;
+      case CELL_FLAG_NOMINE:
+        flagno++;
+        break;
+      }
+
+  return (flagok == MINE_AMOUNT && flagno == 0);
 }
