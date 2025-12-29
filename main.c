@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-int rcur = 8, ccur = 15;
+int rcur = 7, ccur = 14;
 int mines = 0, minesnow = 0;
 bool gameover = false;
 
@@ -48,7 +48,7 @@ bool gameover = false;
 // #define BG_RED "\033[48;5;160;38;5;15m"
 #define BG_RED "\x1b[48;2;255;0;0m"
 // #define BG_CYAN "\033[48;5;30;38;5;15m"
-#define BG_CYAN "\x1b[48;2;30;38;5m"
+#define BG_CYAN "\x1b[48;2;30;138;155m"
 
 int board[ROWMAX + 1][COLMAX + 1];
 char msg[100];
@@ -163,7 +163,17 @@ void dig(int r, int c)
   case CELL_CLOSED_NOMINE:
     board[r][c] = checkmine(r, c);
     if (board[r][c] == 0)
+    {
       board[r][c] = CELL_LAND;
+      int rr, cc;
+      for (int i = 0; i < 8; i++)
+      {
+        rr = r + dx[i], cc = c + dy[i];
+        if (rr < ROWMIN || rr > ROWMAX || cc < COLMIN || cc > COLMAX)
+          continue;
+        dig(rr, cc);
+      }
+    }
     strcpy(msg, "Digged.");
     break;
   case CELL_FLAG_MINE:
@@ -176,19 +186,21 @@ void dig(int r, int c)
 
 void initgame()
 {
-  // 지뢰100개 칸480개 = 확률 20.83%
   srand(time(NULL));
+
   for (int i = ROWMIN; i <= ROWMAX; i++)
     for (int j = COLMIN; j <= COLMAX; j++)
-    {
-      if (rand() % 100 < 20)
-      {
-        mines++;
-        board[i][j] = CELL_CLOSED_MINE;
-      }
-      else
-        board[i][j] = CELL_CLOSED_NOMINE;
-    }
+      board[i][j] = CELL_CLOSED_NOMINE;
+
+  while (mines < 99)
+  {
+    int r = rand() % (ROWMAX + 1);
+    int c = rand() % (COLMAX + 1);
+    if (board[r][c] == CELL_CLOSED_MINE)
+      continue;
+    board[r][c] = CELL_CLOSED_MINE;
+    mines++;
+  }
 
   strcpy(msg, "Game start");
 }
@@ -252,48 +264,60 @@ void print_gameover()
   }
   printf("Game over.\n");
   printf("Mines: %d/%d\n", minesnow, mines);
-  printf("Change view with <v>, Terminate with <t>\n");
+  printf("Change view with <v>, Restart with <r>, Terminate with <t>\n");
 }
 
 int main(int argc, char **argv)
 {
   int ch = 0;
-  initgame();
-  print();
-  while ((ch = getch()) != 't')
+  while (true)
   {
-    printf("%d\n", ch);
-    switch (ch)
+    mines = 0, minesnow = 0, rcur = 7, ccur = 14;
+    gameover = false;
+    initgame();
+    print();
+    while ((ch = getch()) != 't')
     {
-    case 'h':
-      (ccur == COLMIN) ? ccur : ccur--;
-      break;
-    case 'j':
-      (rcur == ROWMAX) ? rcur : rcur++;
-      break;
-    case 'k':
-      (rcur == ROWMIN) ? rcur : rcur--;
-      break;
-    case 'l':
-      (ccur == COLMAX) ? ccur : ccur++;
-      break;
-    case 'f':
-      flag(rcur, ccur);
-      break;
-    case 'd':
-      dig(rcur, ccur);
-      break;
+      printf("%d\n", ch);
+      switch (ch)
+      {
+      case 'h':
+        (ccur == COLMIN) ? ccur : ccur--;
+        break;
+      case 'j':
+        (rcur == ROWMAX) ? rcur : rcur++;
+        break;
+      case 'k':
+        (rcur == ROWMIN) ? rcur : rcur--;
+        break;
+      case 'l':
+        (ccur == COLMAX) ? ccur : ccur++;
+        break;
+      case 'f':
+        flag(rcur, ccur);
+        break;
+      case 'd':
+        dig(rcur, ccur);
+        break;
+      }
+      if (gameover)
+        break;
+      print();
+    }
+    print_gameover();
+    while ((ch = getch()) != 't')
+    {
+      if (ch == 'v')
+        viewmine = !viewmine;
+      else if (ch == 'r')
+      {
+        gameover = false;
+        break;
+      }
+      print_gameover();
     }
     if (gameover)
       break;
-    print();
-  }
-  print_gameover();
-  while ((ch = getch()) != 't')
-  {
-    if (ch == 'v')
-      viewmine = !viewmine;
-    print_gameover();
   }
   return 0;
 }
