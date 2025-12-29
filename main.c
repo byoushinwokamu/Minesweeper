@@ -4,14 +4,12 @@
 #include <stdbool.h>
 #include <time.h>
 
-int rcur = 7, ccur = 14;
-int mines = 0, minesnow = 0;
-bool gameover = false;
-
 #define ROWMIN 0
 #define COLMIN 0
 #define ROWMAX 15
 #define COLMAX 29
+#define ROWINI 7
+#define COLINI 14
 
 #define MINE "★"
 #define FLAG "†"
@@ -52,6 +50,10 @@ bool gameover = false;
 
 int board[ROWMAX + 1][COLMAX + 1];
 char msg[100];
+
+int rcur, ccur;
+int mines = 0, minesnow = 0;
+bool gameover = false;
 
 int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
 int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
@@ -125,7 +127,7 @@ void print()
     }
     printf("\n");
   }
-  printf("Move with <h,j,k,l>, Plant a flag with <f>, Dig a cell with <d>, Terminate "
+  printf("Move with <h,j,k,l>, Plant a flag with <f>, Dig a cell with <d>, Autodig with <a>, Terminate "
          "with <t>\n");
   printf("Mines: %d/%d\n", minesnow, mines);
   printf("%s", msg);
@@ -137,15 +139,19 @@ void flag(int r, int c)
   {
   case CELL_CLOSED_MINE:
     board[r][c] = CELL_FLAG_MINE;
+    minesnow++;
     break;
   case CELL_CLOSED_NOMINE:
     board[r][c] = CELL_FLAG_NOMINE;
+    minesnow++;
     break;
   case CELL_FLAG_MINE:
     board[r][c] = CELL_CLOSED_MINE;
+    minesnow--;
     break;
   case CELL_FLAG_NOMINE:
     board[r][c] = CELL_CLOSED_NOMINE;
+    minesnow--;
     break;
   case CELL_LAND:
     strcpy(msg, "You can't plant a flag on this cell.");
@@ -184,24 +190,42 @@ void dig(int r, int c)
   }
 }
 
+void autodig(int r, int c)
+{
+  int rr, cc;
+  for (int i = 0; i < 8; i++)
+  {
+    rr = r + dx[i], cc = c + dy[i];
+    if (rr < ROWMIN || rr > ROWMAX || cc < COLMIN || cc > COLMAX)
+      continue;
+    if (board[rr][cc] == CELL_CLOSED_MINE || board[rr][cc] == CELL_CLOSED_NOMINE)
+      dig(rr, cc);
+  }
+}
+
 void initgame()
 {
+  rcur = ROWINI, ccur = COLINI;
+  minesnow = 0;
+  gameover = false;
   srand(time(NULL));
-
-  for (int i = ROWMIN; i <= ROWMAX; i++)
-    for (int j = COLMIN; j <= COLMAX; j++)
-      board[i][j] = CELL_CLOSED_NOMINE;
-
-  while (mines < 99)
+  do
   {
-    int r = rand() % (ROWMAX + 1);
-    int c = rand() % (COLMAX + 1);
-    if (board[r][c] == CELL_CLOSED_MINE)
-      continue;
-    board[r][c] = CELL_CLOSED_MINE;
-    mines++;
-  }
+    mines = 0;
+    for (int i = ROWMIN; i <= ROWMAX; i++)
+      for (int j = COLMIN; j <= COLMAX; j++)
+        board[i][j] = CELL_CLOSED_NOMINE;
 
+    while (mines < 99)
+    {
+      int r = rand() % (ROWMAX + 1);
+      int c = rand() % (COLMAX + 1);
+      if (board[r][c] == CELL_CLOSED_MINE)
+        continue;
+      board[r][c] = CELL_CLOSED_MINE;
+      mines++;
+    }
+  } while (board[ROWINI][COLINI] != CELL_CLOSED_NOMINE || checkmine(ROWINI, COLINI) != 0);
   strcpy(msg, "Game start");
 }
 
@@ -264,7 +288,7 @@ void print_gameover()
   }
   printf("Game over.\n");
   printf("Mines: %d/%d\n", minesnow, mines);
-  printf("Change view with <v>, Restart with <r>, Terminate with <t>\n");
+  printf("Restart with <r>, Terminate with <t>\n");
 }
 
 int main(int argc, char **argv)
@@ -272,8 +296,6 @@ int main(int argc, char **argv)
   int ch = 0;
   while (true)
   {
-    mines = 0, minesnow = 0, rcur = 7, ccur = 14;
-    gameover = false;
     initgame();
     print();
     while ((ch = getch()) != 't')
@@ -299,6 +321,8 @@ int main(int argc, char **argv)
       case 'd':
         dig(rcur, ccur);
         break;
+      case 'a':
+        autodig(rcur, ccur);
       }
       if (gameover)
         break;
@@ -316,7 +340,7 @@ int main(int argc, char **argv)
       }
       print_gameover();
     }
-    if (gameover)
+    if (ch == 't')
       break;
   }
   return 0;
