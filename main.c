@@ -73,6 +73,21 @@ int checkmine(int r, int c)
   return m;
 }
 
+int checkflag(int r, int c)
+{
+  int rr, cc;
+  int f = 0;
+  for (int i = 0; i < 8; i++)
+  {
+    rr = r + dx[i], cc = c + dy[i];
+    if (rr < ROWMIN || rr > ROWMAX || cc < COLMIN || cc > COLMAX)
+      continue;
+    if (board[rr][cc] == CELL_FLAG_MINE || board[rr][cc] == CELL_FLAG_NOMINE)
+      f++;
+  }
+  return f;
+}
+
 void print()
 {
   system("clear");
@@ -193,6 +208,11 @@ void dig(int r, int c)
 void autodig(int r, int c)
 {
   int rr, cc;
+  if (checkflag(r, c) != checkmine(r, c))
+  {
+    strcpy(msg, "You can't autodig.");
+    return;
+  }
   for (int i = 0; i < 8; i++)
   {
     rr = r + dx[i], cc = c + dy[i];
@@ -203,11 +223,8 @@ void autodig(int r, int c)
   }
 }
 
-void initgame()
+void initboard(int ri, int ci)
 {
-  rcur = ROWINI, ccur = COLINI;
-  minesnow = 0;
-  gameover = false;
   srand(time(NULL));
   do
   {
@@ -225,7 +242,7 @@ void initgame()
       board[r][c] = CELL_CLOSED_MINE;
       mines++;
     }
-  } while (board[ROWINI][COLINI] != CELL_CLOSED_NOMINE || checkmine(ROWINI, COLINI) != 0);
+  } while (board[ri][ci] != CELL_CLOSED_NOMINE || checkmine(ri, ci) != 0);
   strcpy(msg, "Game start");
 }
 
@@ -296,7 +313,11 @@ int main(int argc, char **argv)
   int ch = 0;
   while (true)
   {
-    initgame();
+    bool gamestart = false;
+    rcur = ROWINI, ccur = COLINI;
+    minesnow = 0;
+    gameover = false;
+    initboard(ROWINI, COLINI);
     print();
     while ((ch = getch()) != 't')
     {
@@ -319,6 +340,10 @@ int main(int argc, char **argv)
         flag(rcur, ccur);
         break;
       case 'd':
+        if (!gamestart)
+        {
+          gamestart = true, initboard(rcur, ccur);
+        }
         dig(rcur, ccur);
         break;
       case 'a':
