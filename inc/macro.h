@@ -3,7 +3,7 @@
 
 /////////////////////////////////////////////////
 
-#define LEVEL3
+#define LEVEL1
 
 // 초급 9x9 10개
 #ifdef LEVEL1
@@ -24,6 +24,13 @@
 #define ROW_SIZE 16
 #define COL_SIZE 30
 #define MINE_AMOUNT 99
+#endif
+
+// 커스텀 게임
+#ifdef LEVELC
+#define ROW_SIZE 20
+#define COL_SIZE 30
+#define MINE_AMOUNT 350
 #endif
 
 /////////////////////////////////////////////////
