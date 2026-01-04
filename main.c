@@ -54,11 +54,11 @@ int main(int argc, char **argv)
     minesnow = 0;
     gameover = false;
     initboard(ROWINI, COLINI);
+    system("clear");
     print();
 
     while (ch = getch())
     {
-      printf("%d\n", ch);
       switch (ch)
       {
       case 'h':

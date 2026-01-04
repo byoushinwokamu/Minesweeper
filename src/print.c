@@ -7,7 +7,7 @@
 
 void print()
 {
-  system("clear");
+  gotoxy(0, 0);
   for (int r = ROWMIN; r <= ROWMAX; r++)
   {
     for (int c = COLMIN; c <= COLMAX; c++)
@@ -62,7 +62,7 @@ void print()
   printf("Move with <h,j,k,l>, Plant a flag with <f>, Dig a cell with <d>, Autodig with <a>, Terminate "
          "with <t>\n");
   printf("Mines: %d/%d\n", minesnow, mines);
-  printf("%s", msg);
+  printf("%s                            ", msg);
 }
 
 void print_gameover()
